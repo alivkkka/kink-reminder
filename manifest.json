@@ -5,5 +5,8 @@
     "description": "Напоминалка фетишей и стоп-слов персонажа прямо в меню расширений",
     "author": "AI Collaborator",
     "js": ["index.js"],
-    "css": ["style.css"]
+    "css": ["style.css"],
+    "co_author": "",
+    "required_scripts": [],
+    "dynamic_css": []
 }

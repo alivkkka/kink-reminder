@@ -1,0 +1,10 @@
+{
+    "name": "Kink Reminder",
+    "id": "kink-reminder",
+    "version": "1.0.0",
+    "description": "Удобная напоминалка фетишей и стоп-слов для каждого персонажа",
+    "author": "AI Collaborator",
+    "js": ["index.js"],
+    "css": ["style.css"]
+}
+

@@ -1,0 +1,84 @@
+#kink-floating-btn {
+    position: fixed;
+    bottom: 140px;
+    right: 20px;
+    width: 46px;
+    height: 46px;
+    background: #ff4565;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4);
+    user-select: none;
+}
+
+#kink-reminder-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(3px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+}
+.kink-modal-box {
+    background: #1a1a24;
+    width: 90%;
+    max-width: 380px;
+    border: 2px solid #ff4565;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+}
+.kink-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.kink-modal-header h3 {
+    color: #ff4565;
+    margin: 0;
+    font-size: 1.25em;
+}
+#close-kink-modal {
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.6em;
+    opacity: 0.6;
+}
+#kink-modal-text {
+    width: 100%;
+    height: 130px;
+    background: #101016;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.95em;
+    resize: none;
+    box-sizing: border-box;
+    outline: none;
+}
+#save-kink-modal {
+    width: 100%;
+    margin-top: 15px;
+    background: #ff4565;
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+}
+

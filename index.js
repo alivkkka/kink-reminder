@@ -1,42 +1,80 @@
-// Функция, которая создаёт окошко внутри меню расширений Таверны
-function initKinkSettings(container) {
-    // Находим имя текущего персонажа
-    let botName = $('.shadow_text-block').first().text() || $('.pe-character-name').text() || $('#nav-bar .character-name').text() || 'Бот';
-    botName = botName.trim().split('\n')[0];
+jQuery(() => {
 
-    const savedText = localStorage.getItem('kink_' + botName) || '';
+    // Добавляем раздел в меню расширений
+    const settingsHtml = `
+    <div id="kink-reminder-settings" class="extension_block">
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>🌶️ Kink Reminder</b>
+            </div>
 
-    const html = `
-        <div style="background: #101016; border: 1px solid #ff4565; border-radius: 10px; padding: 15px; margin-top: 10px; font-family: sans-serif;">
-            <p style="margin: 0 0 10px 0; font-size: 1em; color: #fff;">🌶️ Заметки для: <b style="color: #ff4565;">${botName}</b></p>
-            <textarea id="kink-menu-text" style="width: 100%; height: 120px; background: #1a1a24; color: #fff; border: 1px solid #333; border-radius: 6px; padding: 8px; font-size: 0.95em; resize: none; box-sizing: border-box; outline: none;" placeholder="Впиши сюда кинки, важные нюансы или стоп-слова персонажа...">${savedText}</textarea>
-            <button id="save-kink-menu" style="width: 100%; margin-top: 10px; background: #ff4565; color: #fff; border: none; padding: 8px; border-radius: 6px; font-size: 0.95em; font-weight: bold; cursor: pointer;">Сохранить изменения</button>
+            <div class="inline-drawer-content">
+
+                <p style="margin-bottom:10px;">
+                    Заметки, фетиши и стоп-слова персонажа
+                </p>
+
+                <textarea
+                    id="kink-menu-text"
+                    style="
+                        width:100%;
+                        height:140px;
+                        background:#1a1a24;
+                        color:white;
+                        border:1px solid #444;
+                        border-radius:8px;
+                        padding:10px;
+                        resize:vertical;
+                        box-sizing:border-box;
+                    "
+                ></textarea>
+
+                <button id="save-kink-menu" class="menu_button" style="margin-top:10px;">
+                    Сохранить
+                </button>
+
+            </div>
         </div>
+    </div>
     `;
 
-    container.append(html);
+    $("#extensions_settings").append(settingsHtml);
 
-    // Логика кнопки сохранения
-    $(document).off('click', '#save-kink-menu').on('click', '#save-kink-menu', function() {
+    // Получаем имя персонажа
+    function getBotName() {
+        let botName =
+            $('.shadow_text-block').first().text() ||
+            $('.pe-character-name').text() ||
+            $('#nav-bar .character-name').text() ||
+            'Бот';
+
+        return botName.trim().split('\n')[0];
+    }
+
+    // Загрузка
+    function loadData() {
+        const botName = getBotName();
+        const saved = localStorage.getItem('kink_' + botName) || '';
+        $('#kink-menu-text').val(saved);
+    }
+
+    loadData();
+
+    // Сохранение
+    $(document).on('click', '#save-kink-menu', function () {
+
+        const botName = getBotName();
         const text = $('#kink-menu-text').val();
+
         localStorage.setItem('kink_' + botName, text);
-        $(this).text('Успешно сохранено! ✓').css('background', '#28a745');
-        setTimeout(() => { 
-            $('#save-kink-menu').text('Сохранить изменения').css('background', '#ff4565'); 
+
+        const btn = $(this);
+
+        btn.text('Сохранено ✓');
+
+        setTimeout(() => {
+            btn.text('Сохранить');
         }, 1500);
     });
-}
 
-// Регистрируем модуль в интерфейсе расширений SillyTavern
-jQuery(async () => {
-    // ST автоматически вызывает эту функцию и передает в неё контейнер модуля в настройках
-    const moduleName = 'kink-reminder';
-    
-    // Каждую секунду проверяем, открыл ли пользователь меню расширений
-    setInterval(() => {
-        const container = $(`[data-extension="${moduleName}"] .extension_container, #${moduleName}_container`);
-        if (container.length > 0 && $('#kink-menu-text').length === 0) {
-            initKinkSettings(container);
-        }
-    }, 1000);
 });

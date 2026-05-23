@@ -1,84 +1,178 @@
-#kink-floating-btn {
-    position: fixed;
-    bottom: 140px;
-    right: 20px;
-    width: 46px;
-    height: 46px;
-    background: #ff4565;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.6em;
-    cursor: pointer;
-    z-index: 9999;
-    box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4);
-    user-select: none;
+#kink-reminder-settings {
+    margin-top: 12px;
 }
 
-#kink-reminder-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(3px);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: sans-serif;
-}
-.kink-modal-box {
-    background: #1a1a24;
-    width: 90%;
-    max-width: 380px;
-    border: 2px solid #ff4565;
+/* Основной блок */
+#kink-reminder-settings .inline-drawer {
+    background: linear-gradient(
+        180deg,
+        rgba(30, 18, 28, 0.96) 0%,
+        rgba(18, 18, 24, 0.96) 100%
+    );
+
+    border: 1px solid rgba(255, 70, 110, 0.35);
     border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-}
-.kink-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-.kink-modal-header h3 {
-    color: #ff4565;
-    margin: 0;
-    font-size: 1.25em;
-}
-#close-kink-modal {
-    cursor: pointer;
-    color: #fff;
-    font-size: 1.6em;
-    opacity: 0.6;
-}
-#kink-modal-text {
-    width: 100%;
-    height: 130px;
-    background: #101016;
-    color: #fff;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 0.95em;
-    resize: none;
-    box-sizing: border-box;
-    outline: none;
-}
-#save-kink-modal {
-    width: 100%;
-    margin-top: 15px;
-    background: #ff4565;
-    color: #fff;
-    border: none;
-    padding: 11px;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 0 18px rgba(255, 70, 110, 0.08),
+        0 6px 18px rgba(0,0,0,0.35);
+
+    backdrop-filter: blur(6px);
 }
 
+/* Заголовок */
+#kink-reminder-settings .inline-drawer-header {
+    padding: 14px 16px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 70, 110, 0.18),
+            rgba(255, 70, 110, 0.05)
+        );
+
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+
+    font-size: 1rem;
+    font-weight: 700;
+
+    color: #ffd6df;
+
+    letter-spacing: 0.3px;
+
+    transition: all 0.2s ease;
+}
+
+/* Hover */
+#kink-reminder-settings .inline-drawer-header:hover {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 70, 110, 0.28),
+            rgba(255, 70, 110, 0.08)
+        );
+
+    color: #ffffff;
+}
+
+/* Контент */
+#kink-reminder-settings .inline-drawer-content {
+    padding: 16px;
+}
+
+/* Текст описания */
+#kink-reminder-settings p {
+    margin-top: 0;
+    margin-bottom: 12px;
+
+    color: #d0c7ce;
+    font-size: 0.92rem;
+    line-height: 1.4;
+}
+
+/* Поле ввода */
+#kink-menu-text {
+    width: 100%;
+    min-height: 160px;
+
+    background: rgba(10, 10, 16, 0.95);
+
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+
+    color: #f4f4f4;
+
+    padding: 12px;
+
+    resize: vertical;
+
+    box-sizing: border-box;
+
+    font-size: 0.95rem;
+    line-height: 1.5;
+
+    transition:
+        border 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+/* Placeholder */
+#kink-menu-text::placeholder {
+    color: rgba(255,255,255,0.28);
+}
+
+/* Focus */
+#kink-menu-text:focus {
+    outline: none;
+
+    border-color: rgba(255, 70, 110, 0.65);
+
+    box-shadow:
+        0 0 0 2px rgba(255, 70, 110, 0.15),
+        0 0 18px rgba(255, 70, 110, 0.08);
+
+    background: rgba(14, 14, 20, 1);
+}
+
+/* Кнопка */
+#save-kink-menu {
+    width: 100%;
+
+    margin-top: 14px;
+    padding: 11px 14px;
+
+    border: none;
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff4d7a 0%,
+            #ff3566 100%
+        );
+
+    color: white;
+
+    font-weight: 700;
+    font-size: 0.95rem;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+
+    box-shadow:
+        0 4px 16px rgba(255, 60, 100, 0.28);
+}
+
+/* Hover кнопки */
+#save-kink-menu:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 24px rgba(255, 60, 100, 0.38);
+}
+
+/* Нажатие */
+#save-kink-menu:active {
+    transform: scale(0.98);
+}
+
+/* Скроллбар */
+#kink-menu-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+#kink-menu-text::-webkit-scrollbar-thumb {
+    background: rgba(255, 70, 110, 0.4);
+    border-radius: 999px;
+}
+
+#kink-menu-text::-webkit-scrollbar-track {
+    background: transparent;
+}

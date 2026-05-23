@@ -1,7 +1,8 @@
+// Функция открытия окна
 function showKinkReminderModal() {
     $('#kink-reminder-modal').remove();
 
-    // Универсальный поиск имени персонажа для любой темы
+    // Универсальный поиск имени персонажа
     let botName = $('.shadow_text-block').first().text() || $('.pe-character-name').text() || $('#nav-bar .character-name').text() || 'Бот';
     botName = botName.trim().split('\n')[0];
 
@@ -35,23 +36,22 @@ function showKinkReminderModal() {
     });
 }
 
-// Поиск главного контейнера темы и жесткая привязка кнопки
-(function() {
-    setInterval(() => {
+// Официальная регистрация расширения в системе SillyTavern
+jQuery(async () => {
+    function createButton() {
         if ($('#kink-floating-btn').length > 0) return;
         
-        // Перебираем все возможные элементы, куда можно встроить кнопку
-        const container = $('#chat-area') || $('#chat') || $('.chat-space') || $('body');
-        
-        if (container.length > 0) {
-            const btnHtml = `<div id="kink-floating-btn" style="position: fixed; bottom: 140px; right: 20px; width: 46px; height: 46px; background: #ff4565; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6em; cursor: pointer; z-index: 9999; box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4); user-select: none;">🌶️</div>`;
-            $('body').append(btnHtml);
+        const btnHtml = `<div id="kink-floating-btn" style="position: fixed; bottom: 140px; right: 20px; width: 46px; height: 46px; background: #ff4565; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6em; cursor: pointer; z-index: 9999; box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4); user-select: none;">🌶️</div>`;
+        $('body').append(btnHtml);
 
-            $(document).off('click', '#kink-floating-btn').on('click', '#kink-floating-btn', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                showKinkReminderModal();
-            });
-        }
-    }, 1000);
-})();
+        $(document).off('click', '#kink-floating-btn').on('click', '#kink-floating-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showKinkReminderModal();
+        });
+    }
+
+    // Запускаем постоянную проверку, чтобы кнопка не исчезала при переключении чатов
+    setInterval(createButton, 1000);
+    console.log("Kink Reminder успешно инициализирован системой!");
+});

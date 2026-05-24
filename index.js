@@ -1,12 +1,130 @@
-import { getContext } from "../../../extensions.js";
+import {
+    getContext
+} from "../../../extensions.js";
 
 jQuery(async () => {
 
-    // =========================
-    // FLOATING BUTTON
-    // =========================
+    // =========================================
+    // SETTINGS
+    // =========================================
 
-    if (!$("#kink-floating-btn").length) {
+    const DEFAULT_SETTINGS = {
+
+        floatingButton: true,
+        autoScan: true,
+        autoReminder: false
+
+    };
+
+    let settings =
+        JSON.parse(
+            localStorage.getItem("kink_reminder_settings")
+        ) || DEFAULT_SETTINGS;
+
+    // =========================================
+    // EXTENSIONS MENU UI
+    // =========================================
+
+    const settingsHtml = `
+
+    <div id="kink-reminder-settings" class="extension_block">
+
+        <div class="inline-drawer">
+
+            <div class="inline-drawer-toggle inline-drawer-header">
+                🌶️ Kink Reminder
+            </div>
+
+            <div class="inline-drawer-content">
+
+                <label class="kink-setting-row">
+                    <input type="checkbox" id="kr-floating-toggle">
+                    Floating кнопка
+                </label>
+
+                <label class="kink-setting-row">
+                    <input type="checkbox" id="kr-autoscan-toggle">
+                    Авто-скан персонажа
+                </label>
+
+                <label class="kink-setting-row">
+                    <input type="checkbox" id="kr-reminder-toggle">
+                    Auto reminder (WIP)
+                </label>
+
+                <button id="kr-open-window" class="menu_button">
+                    🌶️ Открыть окно
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    `;
+
+    $("#extensions_settings").append(settingsHtml);
+
+    // =========================================
+    // LOAD SETTINGS UI
+    // =========================================
+
+    $("#kr-floating-toggle")
+        .prop("checked", settings.floatingButton);
+
+    $("#kr-autoscan-toggle")
+        .prop("checked", settings.autoScan);
+
+    $("#kr-reminder-toggle")
+        .prop("checked", settings.autoReminder);
+
+    // =========================================
+    // SAVE SETTINGS
+    // =========================================
+
+    function saveSettings() {
+
+        localStorage.setItem(
+            "kink_reminder_settings",
+            JSON.stringify(settings)
+        );
+    }
+
+    // =========================================
+    // SETTINGS EVENTS
+    // =========================================
+
+    $(document).on("change", "#kr-floating-toggle", function () {
+
+        settings.floatingButton = this.checked;
+
+        saveSettings();
+
+        updateFloatingButton();
+    });
+
+    $(document).on("change", "#kr-autoscan-toggle", function () {
+
+        settings.autoScan = this.checked;
+
+        saveSettings();
+    });
+
+    $(document).on("change", "#kr-reminder-toggle", function () {
+
+        settings.autoReminder = this.checked;
+
+        saveSettings();
+    });
+
+    // =========================================
+    // FLOATING BUTTON
+    // =========================================
+
+    function createFloatingButton() {
+
+        if ($("#kink-floating-btn").length) return;
 
         $("body").append(`
             <div id="kink-floating-btn">
@@ -15,9 +133,28 @@ jQuery(async () => {
         `);
     }
 
-    // =========================
-    // MODAL WINDOW
-    // =========================
+    function removeFloatingButton() {
+
+        $("#kink-floating-btn").remove();
+    }
+
+    function updateFloatingButton() {
+
+        if (settings.floatingButton) {
+
+            createFloatingButton();
+
+        } else {
+
+            removeFloatingButton();
+        }
+    }
+
+    updateFloatingButton();
+
+    // =========================================
+    // CREATE MODAL
+    // =========================================
 
     function createModal() {
 
@@ -25,98 +162,153 @@ jQuery(async () => {
 
         $("body").append(`
 
-            <div id="kink-reminder-modal">
+        <div id="kink-reminder-modal">
 
-                <div class="kink-modal-box">
+            <div class="kink-modal-box">
 
-                    <div class="kink-modal-header">
-                        <h3>🌶️ Kink Reminder</h3>
-                        <span id="close-kink-modal">×</span>
-                    </div>
+                <div class="kink-modal-header">
 
-                    <p class="kink-modal-desc">
-                        Автоматический поиск NSFW preferences персонажа
-                    </p>
+                    <h3>
+                        🌶️
+                        <span id="kr-character-name">
+                            Character
+                        </span>
+                    </h3>
 
-                    <button id="scan-kinks-btn">
-                        🔍 Сканировать карту
-                    </button>
-
-                    <textarea
-                        id="kink-modal-text"
-                        placeholder="Здесь появятся найденные кинки..."
-                    ></textarea>
-
-                    <button id="save-kink-modal">
-                        💾 Сохранить
-                    </button>
+                    <span id="close-kink-modal">
+                        ×
+                    </span>
 
                 </div>
 
+                <p class="kink-modal-desc">
+                    Найденные preferences персонажа
+                </p>
+
+                <button id="scan-kinks-btn">
+                    🔍 Сканировать карту
+                </button>
+
+                <textarea
+                    id="kink-modal-text"
+                    placeholder="Кинки персонажа..."
+                ></textarea>
+
+                <button id="save-kink-modal">
+                    💾 Сохранить
+                </button>
+
             </div>
 
-        `);
+        </div>
 
-        loadSavedKinks();
+        `);
     }
 
-    // =========================
-    // GET CHARACTER
-    // =========================
+    createModal();
+
+    // =========================================
+    // CHARACTER
+    // =========================================
 
     function getCharacter() {
 
         const context = getContext();
 
-        const character =
-            context.characters[context.characterId];
-
-        return character;
+        return context.characters[
+            context.characterId
+        ];
     }
-
-    // =========================
-    // CHARACTER KEY
-    // =========================
 
     function getCharacterKey() {
 
-        const character = getCharacter();
+        const char = getCharacter();
 
         return (
-            character?.avatar ||
-            character?.name ||
-            "unknown_character"
+            char?.avatar ||
+            char?.name ||
+            "unknown"
         );
     }
 
-    // =========================
-    // LOAD SAVED
-    // =========================
+    // =========================================
+    // OPEN MODAL
+    // =========================================
 
-    function loadSavedKinks() {
+    function openModal() {
+
+        const character = getCharacter();
+
+        if (!character) {
+
+            toastr.error("Персонаж не найден");
+
+            return;
+        }
+
+        $("#kr-character-name")
+            .text(character.name);
+
+        loadCharacterData();
+
+        $("#kink-reminder-modal")
+            .fadeIn(120);
+    }
+
+    // =========================================
+    // CLOSE MODAL
+    // =========================================
+
+    $(document).on("click", "#close-kink-modal", function () {
+
+        $("#kink-reminder-modal")
+            .fadeOut(120);
+    });
+
+    // =========================================
+    // OPEN EVENTS
+    // =========================================
+
+    $(document).on("click", "#kink-floating-btn", function () {
+
+        openModal();
+    });
+
+    $(document).on("click", "#kr-open-window", function () {
+
+        openModal();
+    });
+
+    // =========================================
+    // LOAD CHARACTER DATA
+    // =========================================
+
+    function loadCharacterData() {
 
         const key = getCharacterKey();
 
         const saved =
-            localStorage.getItem("kink_" + key) || "";
+            localStorage.getItem(
+                "kink_" + key
+            ) || "";
 
-        $("#kink-modal-text").val(saved);
+        $("#kink-modal-text")
+            .val(saved);
     }
 
-    // =========================
-    // SAVE
-    // =========================
+    // =========================================
+    // SAVE CHARACTER DATA
+    // =========================================
 
     $(document).on("click", "#save-kink-modal", function () {
 
         const key = getCharacterKey();
 
-        const text =
-            $("#kink-modal-text").val();
-
         localStorage.setItem(
+
             "kink_" + key,
-            text
+
+            $("#kink-modal-text").val()
         );
 
         $(this)
@@ -127,40 +319,14 @@ jQuery(async () => {
             $("#save-kink-modal")
                 .text("💾 Сохранить");
 
-        }, 1400);
+        }, 1200);
     });
 
-    // =========================
-    // OPEN MODAL
-    // =========================
-
-    $(document).on("click", "#kink-floating-btn", function () {
-
-        createModal();
-
-        $("#kink-reminder-modal").fadeIn(150);
-
-        loadSavedKinks();
-    });
-
-    // =========================
-    // CLOSE MODAL
-    // =========================
-
-    $(document).on("click", "#close-kink-modal", function () {
-
-        $("#kink-reminder-modal").fadeOut(150);
-    });
-
-    // =========================
-    // KINK EXTRACTION
-    // =========================
+    // =========================================
+    // EXTRACT KINKS
+    // =========================================
 
     function extractKinks(text) {
-
-        if (!text) return [];
-
-        const results = [];
 
         const kinkKeywords = [
 
@@ -171,47 +337,20 @@ jQuery(async () => {
             "rough sex",
             "choking",
             "biting",
-            "marking",
             "degradation",
             "orgasm control",
             "fingering",
             "shower sex",
             "semi-public",
             "facial",
-            "face sitting",
             "facesitting",
             "praise",
-            "domination",
-            "submission",
             "breeding",
             "creampie",
-            "cockwarming",
-            "humiliation",
             "edging",
-            "throat fuck",
-            "thigh riding",
             "bondage",
             "spanking",
-            "pet play",
-            "voyeurism",
-            "exhibitionism",
-            "size difference",
-            "overstimulation",
-            "cum play",
             "dirty talk",
-            "gagging",
-            "knife play",
-            "roleplay",
-            "public sex",
-            "somnophilia",
-            "dacryphilia",
-            "mommy",
-            "daddy",
-            "master",
-            "slave",
-            "tentacles",
-            "tail play",
-            "monster sex",
 
             // RU
 
@@ -230,13 +369,13 @@ jQuery(async () => {
             "жёсткий секс",
             "шлепки",
             "порка",
-            "доминирование",
-            "подчинение",
             "унижение",
             "эджинг",
-            "связывание",
-            "ролеплей"
+            "связывание"
+
         ];
+
+        const found = [];
 
         const lower =
             text.toLowerCase();
@@ -245,35 +384,33 @@ jQuery(async () => {
 
             if (lower.includes(kink)) {
 
-                results.push(kink);
+                found.push(kink);
             }
         }
 
-        return [...new Set(results)];
+        return [...new Set(found)];
     }
 
-    // =========================
-    // FIND NSFW BLOCKS
-    // =========================
+    // =========================================
+    // GET CHARACTER TEXT
+    // =========================================
 
-    function getCharacterNSFWText(character) {
+    function getCharacterText(character) {
 
-        const fields = [
+        return `
 
-            character.description || "",
-            character.personality || "",
-            character.scenario || "",
-            character.first_mes || "",
-            character.mes_example || ""
+            ${character.description || ""}
+            ${character.personality || ""}
+            ${character.scenario || ""}
+            ${character.first_mes || ""}
+            ${character.mes_example || ""}
 
-        ];
-
-        return fields.join("\n\n");
+        `;
     }
 
-    // =========================
-    // SCAN BUTTON
-    // =========================
+    // =========================================
+    // SCAN CHARACTER
+    // =========================================
 
     $(document).on("click", "#scan-kinks-btn", function () {
 
@@ -282,37 +419,42 @@ jQuery(async () => {
 
         if (!character) {
 
-            toastr.error("Персонаж не найден");
+            toastr.error("Нет персонажа");
 
             return;
         }
 
         const text =
-            getCharacterNSFWText(character);
+            getCharacterText(character);
 
-        const found =
+        const kinks =
             extractKinks(text);
 
-        if (found.length === 0) {
+        if (!kinks.length) {
 
-            $("#kink-modal-text").val(
+            $("#kink-modal-text")
+                .val(
 `Ничего не найдено автоматически.
 
-Попробуй добавить вручную.`
-            );
+Добавь вручную.`
+                );
 
-            toastr.warning("Кинки не найдены");
+            toastr.warning(
+                "Кинки не найдены"
+            );
 
             return;
         }
 
-        const formatted =
-            found.map(x => `• ${x}`).join("\n");
-
-        $("#kink-modal-text").val(formatted);
+        $("#kink-modal-text")
+            .val(
+                kinks
+                    .map(x => `• ${x}`)
+                    .join("\n")
+            );
 
         toastr.success(
-            `Найдено: ${found.length}`
+            `Найдено: ${kinks.length}`
         );
     });
 

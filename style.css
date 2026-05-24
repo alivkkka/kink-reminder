@@ -1,51 +1,109 @@
 #kink-floating-btn {
-
     position: fixed;
-
-    width: 68px;
-    height: 68px;
-
-    border-radius: 999px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ff7eb6,
-            #ff4f8a
-        );
-
+    width: 48px;
+    height: 48px;
+    background: #ff4565;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    font-size: 2rem;
-
-    z-index: 999999999;
-
-    box-shadow:
-        0 10px 28px rgba(255, 70, 120, 0.35);
-
-    cursor: grab;
-
+    font-size: 1.6em;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4);
     user-select: none;
-
     touch-action: none;
-
-    transition:
-        transform 0.12s ease,
-        box-shadow 0.2s ease;
-
-    border:
-        2px solid rgba(255,255,255,0.12);
-
-    backdrop-filter: blur(10px);
 }
 
-/* Нажатие */
+#kink-reminder-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(3px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+}
 
-#kink-floating-btn:active {
+.kink-modal-box {
+    background: #13131a;
+    border: 2px solid #ff4565;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-sizing: border-box;
+}
 
-    cursor: grabbing;
+.kink-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
 
-    transform: scale(0.93);
+.kink-modal-header h3 {
+    margin: 0;
+    color: #fff;
+}
+
+.kink-modal-desc {
+    margin: 0 0 15px 0;
+    font-size: 0.9em;
+    color: #888;
+}
+
+#close-kink-modal {
+    font-size: 28px;
+    color: #666;
+    cursor: pointer;
+}
+
+#close-kink-modal:hover {
+    color: #fff;
+}
+
+#scan-kinks-btn {
+    width: 100%;
+    background: #1a1a24;
+    color: #ff4565;
+    border: 1px solid #ff4565;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#kink-modal-text {
+    width: 100%;
+    height: 150px;
+    background: #1a1a24;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 1em;
+    resize: none;
+    box-sizing: border-box;
+    outline: none;
+    margin-bottom: 15px;
+}
+
+#save-kink-modal {
+    width: 100%;
+    background: #ff4565;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
 }

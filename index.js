@@ -1,80 +1,213 @@
-jQuery(() => {
+import { getContext } from "../../../extensions.js";
 
-    // Добавляем раздел в меню расширений
+jQuery(async () => {
+
+    const context = getContext();
+
+    // ===== UI =====
+
     const settingsHtml = `
     <div id="kink-reminder-settings" class="extension_block">
+
         <div class="inline-drawer">
+
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>🌶️ Kink Reminder</b>
+                🌶️ Kink Reminder
             </div>
 
             <div class="inline-drawer-content">
 
-                <p style="margin-bottom:10px;">
-                    Заметки, фетиши и стоп-слова персонажа
+                <p class="kink-desc">
+                    AI анализирует карту персонажа и ищет возможные предпочтения.
                 </p>
+
+                <button id="scan-kinks-btn" class="menu_button">
+                    🔍 Сканировать карту персонажа
+                </button>
 
                 <textarea
                     id="kink-menu-text"
-                    style="
-                        width:100%;
-                        height:140px;
-                        background:#1a1a24;
-                        color:white;
-                        border:1px solid #444;
-                        border-radius:8px;
-                        padding:10px;
-                        resize:vertical;
-                        box-sizing:border-box;
-                    "
+                    placeholder="Здесь появятся найденные preferences..."
                 ></textarea>
 
-                <button id="save-kink-menu" class="menu_button" style="margin-top:10px;">
-                    Сохранить
+                <button id="save-kink-menu" class="menu_button">
+                    💾 Сохранить
                 </button>
 
             </div>
+
         </div>
+
     </div>
     `;
 
     $("#extensions_settings").append(settingsHtml);
 
-    // Получаем имя персонажа
-    function getBotName() {
-        let botName =
-            $('.shadow_text-block').first().text() ||
-            $('.pe-character-name').text() ||
-            $('#nav-bar .character-name').text() ||
-            'Бот';
+    // ===== Получение персонажа =====
 
-        return botName.trim().split('\n')[0];
+    function getCharacter() {
+
+        const context = getContext();
+
+        const character = context.characters[context.characterId];
+
+        return character;
     }
 
-    // Загрузка
-    function loadData() {
-        const botName = getBotName();
-        const saved = localStorage.getItem('kink_' + botName) || '';
-        $('#kink-menu-text').val(saved);
+    // ===== Получение ID =====
+
+    function getCharacterKey() {
+
+        const char = getCharacter();
+
+        return char?.avatar || char?.name || "unknown";
     }
 
-    loadData();
+    // ===== Загрузка =====
 
-    // Сохранение
-    $(document).on('click', '#save-kink-menu', function () {
+    function loadSavedData() {
 
-        const botName = getBotName();
-        const text = $('#kink-menu-text').val();
+        const key = getCharacterKey();
 
-        localStorage.setItem('kink_' + botName, text);
+        const saved =
+            localStorage.getItem("kink_" + key) || "";
 
-        const btn = $(this);
+        $("#kink-menu-text").val(saved);
+    }
 
-        btn.text('Сохранено ✓');
+    // ===== Анализ карты =====
 
-        setTimeout(() => {
-            btn.text('Сохранить');
-        }, 1500);
+    function analyzeCharacterCard(character) {
+
+        const fullText = `
+            ${character.description || ""}
+            ${character.personality || ""}
+            ${character.scenario || ""}
+            ${character.first_mes || ""}
+            ${character.mes_example || ""}
+        `.toLowerCase();
+
+        const detected = [];
+
+        const kinkMap = {
+            teasing: [
+                "tease",
+                "playful",
+                "mocking",
+                "flirty"
+            ],
+
+            possessive: [
+                "possessive",
+                "mine",
+                "jealous",
+                "controlling"
+            ],
+
+            dominant: [
+                "dominant",
+                "dom",
+                "commanding",
+                "control"
+            ],
+
+            submissive: [
+                "submissive",
+                "obedient",
+                "shy",
+                "sub"
+            ],
+
+            praise: [
+                "good girl",
+                "good boy",
+                "praise"
+            ],
+
+            biting: [
+                "bite",
+                "marking",
+                "neck kisses"
+            ],
+
+            rough: [
+                "rough",
+                "aggressive",
+                "hard thrust"
+            ],
+
+            romantic: [
+                "gentle",
+                "loving",
+                "affectionate",
+                "soft kisses"
+            ]
+        };
+
+        for (const [label, words] of Object.entries(kinkMap)) {
+
+            for (const word of words) {
+
+                if (fullText.includes(word)) {
+
+                    detected.push(label);
+
+                    break;
+                }
+            }
+        }
+
+        return detected;
+    }
+
+    // ===== Scan =====
+
+    $(document).on("click", "#scan-kinks-btn", function () {
+
+        const character = getCharacter();
+
+        if (!character) {
+            toastr.error("Персонаж не найден");
+            return;
+        }
+
+        const result = analyzeCharacterCard(character);
+
+        if (result.length === 0) {
+
+            $("#kink-menu-text").val(
+                "Ничего не найдено автоматически.\nДобавь вручную."
+            );
+
+            return;
+        }
+
+        const formatted =
+            result.map(x => `• ${x}`).join("\n");
+
+        $("#kink-menu-text").val(formatted);
+
+        toastr.success("Карта персонажа проанализирована");
     });
+
+    // ===== Save =====
+
+    $(document).on("click", "#save-kink-menu", function () {
+
+        const key = getCharacterKey();
+
+        const text = $("#kink-menu-text").val();
+
+        localStorage.setItem(
+            "kink_" + key,
+            text
+        );
+
+        toastr.success("Preferences сохранены");
+    });
+
+    // ===== Auto load =====
+
+    setTimeout(loadSavedData, 1000);
 
 });

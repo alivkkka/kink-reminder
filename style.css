@@ -1,109 +1,196 @@
+/* ==================================================
+   ПЛАВАЮЩАЯ КНОПКА-ПЕРСИК
+   ================================================== */
 #kink-floating-btn {
     position: fixed;
-    width: 48px;
-    height: 48px;
-    background: #ff4565;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #ff4565, #ff6b8b);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6em;
+    font-size: 1.8em;
     cursor: pointer;
     z-index: 9999;
-    box-shadow: 0 4px 15px rgba(255, 69, 101, 0.4);
+    /* Красивая неоновая тень под цвет кнопки */
+    box-shadow: 0 4px 20px rgba(255, 69, 101, 0.45);
     user-select: none;
     touch-action: none;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 
+/* Эффект легкого увеличения при удерживании/нажатии */
+#kink-floating-btn:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 10px rgba(255, 69, 101, 0.6);
+}
+
+/* ==================================================
+   ЗАДНИЙ ФОН (ЗАДНИК МОДАЛЬНОГО ОКНА)
+   ================================================== */
 #kink-reminder-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(3px);
+    background: rgba(10, 10, 14, 0.82);
+    /* Эффект матового размытого стекла на заднем плане */
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 99999;
     display: none;
     align-items: center;
     justify-content: center;
-    font-family: sans-serif;
-}
-
-.kink-modal-box {
-    background: #13131a;
-    border: 2px solid #ff4565;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
     box-sizing: border-box;
 }
 
+/* ==================================================
+   ОСНОВНОЕ ОКНО НАПОМИНАЛКИ
+   ================================================== */
+.kink-modal-box {
+    background: #181824;
+    border: 1px solid rgba(255, 69, 101, 0.35);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 380px;
+    padding: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+    box-sizing: border-box;
+    position: relative;
+    animation: kinkPopupEntrance 0.2s ease-out;
+}
+
+/* Плавное появление окошка */
+@keyframes kinkPopupEntrance {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* Шапка окна */
 .kink-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .kink-modal-header h3 {
     margin: 0;
-    color: #fff;
+    color: #ffffff;
+    font-size: 1.3em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
-.kink-modal-desc {
-    margin: 0 0 15px 0;
-    font-size: 0.9em;
-    color: #888;
-}
-
+/* Кнопка закрытия (Крестик) */
 #close-kink-modal {
-    font-size: 28px;
-    color: #666;
+    font-size: 24px;
+    color: #88889c;
     cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    transition: color 0.2s;
 }
 
 #close-kink-modal:hover {
-    color: #fff;
+    color: #ff4565;
 }
 
+/* Описание под именем персонажа */
+.kink-modal-desc {
+    margin: 0 0 16px 0;
+    font-size: 0.9em;
+    color: #a0a0b8;
+}
+
+#kr-character-name {
+    color: #ff4565;
+    text-shadow: 0 0 10px rgba(255, 69, 101, 0.2);
+}
+
+/* ==================================================
+   КНОПКИ И ТЕКСТОВОЕ ПОЛЕ
+   ================================================== */
+/* Кнопка сканирования карты */
 #scan-kinks-btn {
     width: 100%;
-    background: #1a1a24;
+    background: rgba(255, 69, 101, 0.08);
     color: #ff4565;
-    border: 1px solid #ff4565;
-    padding: 8px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    font-weight: bold;
+    border: 1px solid rgba(255, 69, 101, 0.4);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 0.95em;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+#scan-kinks-btn:active {
+    background: rgba(255, 69, 101, 0.2);
+}
+
+/* Текстовая зона */
 #kink-modal-text {
     width: 100%;
-    height: 150px;
-    background: #1a1a24;
-    color: #fff;
-    border: 1px solid #333;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 1em;
+    height: 160px;
+    background: #11111a;
+    color: #f3f3f9;
+    border: 1px solid #29293d;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.95em;
+    line-height: 1.4;
     resize: none;
     box-sizing: border-box;
     outline: none;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
 }
 
+#kink-modal-text:focus {
+    border-color: rgba(255, 69, 101, 0.6);
+}
+
+/* Кнопка сохранить */
 #save-kink-modal {
     width: 100%;
     background: #ff4565;
-    color: #fff;
+    color: #ffffff;
     border: none;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 12px;
+    border-radius: 8px;
     font-size: 1em;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 69, 101, 0.25);
+    transition: all 0.2s ease;
+}
+
+#save-kink-modal:active {
+    transform: translateY(1px);
+    background: #e03e5a;
+}
+
+/* ==================================================
+   СТИЛИ ДЛЯ МЕНЮ НАСТРОЕК (В КУБИКАХ)
+   ================================================== */
+.kink-setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: #e2e2ec;
+    cursor: pointer;
+    font-size: 0.95em;
+}
+
+.kink-setting-row input[type="checkbox"] {
+    accent-color: #ff4565; /* Делаем галочки в цвет плагина */
+    width: 16px;
+    height: 16px;
 }

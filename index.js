@@ -1,175 +1,410 @@
-function createFloatingButton() {
+import { getContext } from "../../../extensions.js";
 
-    if ($("#kink-floating-btn").length)
-        return;
+jQuery(async () => {
 
-    $("body").append(`
+    // =====================================================
+    // SETTINGS
+    // =====================================================
 
-        <div id="kink-floating-btn">
-            🍑
-        </div>
+    const DEFAULT_SETTINGS = {
+        floatingButton: true
+    };
 
-    `);
+    let settings =
+        JSON.parse(
+            localStorage.getItem("kr_settings")
+        ) || DEFAULT_SETTINGS;
 
-    const btn =
-        document.getElementById(
-            "kink-floating-btn"
+    function saveSettings() {
+
+        localStorage.setItem(
+            "kr_settings",
+            JSON.stringify(settings)
         );
-
-    // ======================================
-    // SAVED POSITION
-    // ======================================
-
-    const savedX =
-        localStorage.getItem(
-            "kr_btn_x"
-        );
-
-    const savedY =
-        localStorage.getItem(
-            "kr_btn_y"
-        );
-
-    if (savedX && savedY) {
-
-        btn.style.left =
-            savedX + "px";
-
-        btn.style.top =
-            savedY + "px";
-
-    } else {
-
-        btn.style.left = "18px";
-        btn.style.top = "220px";
     }
 
-    // ======================================
-    // DRAG SYSTEM
-    // ======================================
+    // =====================================================
+    // EXTENSION PANEL
+    // =====================================================
 
-    let isDragging = false;
+    const settingsHtml = `
 
-    let moved = false;
+    <div class="extension_block">
 
-    let startX = 0;
-    let startY = 0;
+        <div class="inline-drawer">
 
-    let offsetX = 0;
-    let offsetY = 0;
+            <div class="inline-drawer-toggle inline-drawer-header">
+                🍑 Kink Reminder
+            </div>
 
-    btn.addEventListener(
-        "touchstart",
+            <div class="inline-drawer-content">
 
-        e => {
+                <label class="checkbox_label">
 
-            const touch =
-                e.touches[0];
+                    <input
+                        type="checkbox"
+                        id="kr-toggle-floating">
 
-            isDragging = true;
+                    Floating button
 
-            moved = false;
+                </label>
 
-            startX = touch.clientX;
-            startY = touch.clientY;
+                <button
+                    id="kr-open-panel"
+                    class="menu_button">
 
-            offsetX =
-                touch.clientX -
-                btn.offsetLeft;
+                    🍑 Open Window
 
-            offsetY =
-                touch.clientY -
-                btn.offsetTop;
-        },
+                </button>
 
-        { passive: true }
-    );
+            </div>
 
-    document.addEventListener(
-        "touchmove",
+        </div>
 
-        e => {
+    </div>
 
-            if (!isDragging)
-                return;
+    `;
 
-            const touch =
-                e.touches[0];
+    $("#extensions_settings")
+        .append(settingsHtml);
 
-            const dx =
-                Math.abs(
-                    touch.clientX - startX
-                );
+    // =====================================================
+    // LOAD SETTINGS
+    // =====================================================
 
-            const dy =
-                Math.abs(
-                    touch.clientY - startY
-                );
+    $("#kr-toggle-floating")
+        .prop(
+            "checked",
+            settings.floatingButton
+        );
 
-            // ==================================
-            // DETECT REAL DRAG
-            // ==================================
+    // =====================================================
+    // SETTINGS EVENTS
+    // =====================================================
 
-            if (dx > 8 || dy > 8) {
+    $(document).on(
+        "change",
+        "#kr-toggle-floating",
 
-                moved = true;
-            }
+        function () {
 
-            if (!moved)
-                return;
+            settings.floatingButton =
+                this.checked;
 
-            const x =
-                touch.clientX -
-                offsetX;
+            saveSettings();
 
-            const y =
-                touch.clientY -
-                offsetY;
-
-            btn.style.left =
-                x + "px";
-
-            btn.style.top =
-                y + "px";
-        },
-
-        { passive: true }
-    );
-
-    document.addEventListener(
-        "touchend",
-
-        () => {
-
-            if (!isDragging)
-                return;
-
-            isDragging = false;
-
-            localStorage.setItem(
-                "kr_btn_x",
-
-                parseInt(
-                    btn.style.left
-                )
-            );
-
-            localStorage.setItem(
-                "kr_btn_y",
-
-                parseInt(
-                    btn.style.top
-                )
-            );
-
-            // ==================================
-            // TAP = OPEN MODAL
-            // ==================================
-
-            if (!moved) {
-
-                openModal();
-            }
+            updateFloatingButton();
         }
     );
-}
+
+    // =====================================================
+    // CHARACTER
+    // =====================================================
+
+    function getCharacter() {
+
+        const context = getContext();
+
+        return context.characters[
+            context.characterId
+        ];
+    }
+
+    function getCharacterKey() {
+
+        const char = getCharacter();
+
+        return (
+            char?.avatar ||
+            char?.name ||
+            "unknown"
+        );
+    }
+
+    // =====================================================
+    // MODAL
+    // =====================================================
+
+    function createModal() {
+
+        if ($("#kr-modal").length)
+            return;
+
+        $("body").append(`
+
+        <div id="kr-modal">
+
+            <div id="kr-modal-box">
+
+                <div id="kr-header">
+
+                    <span id="kr-title">
+                        🍑 Kink Reminder
+                    </span>
+
+                    <span id="kr-close">
+                        ×
+                    </span>
+
+                </div>
+
+                <textarea
+                    id="kr-textarea"
+                    placeholder="Character kinks..."
+                ></textarea>
+
+                <button id="kr-save">
+
+                    💾 Save
+
+                </button>
+
+            </div>
+
+        </div>
+
+        `);
+    }
+
+    createModal();
+
+    // =====================================================
+    // OPEN MODAL
+    // =====================================================
+
+    function openModal() {
+
+        loadCharacterData();
+
+        $("#kr-modal")
+            .css("display", "flex")
+            .hide()
+            .fadeIn(120);
+    }
+
+    // =====================================================
+    // CLOSE
+    // =====================================================
+
+    $(document).on(
+        "click",
+        "#kr-close",
+
+        function () {
+
+            $("#kr-modal")
+                .fadeOut(120);
+        }
+    );
+
+    // =====================================================
+    // LOAD DATA
+    // =====================================================
+
+    function loadCharacterData() {
+
+        const key =
+            getCharacterKey();
+
+        const saved =
+            localStorage.getItem(
+                "kr_" + key
+            ) || "";
+
+        $("#kr-textarea")
+            .val(saved);
+    }
+
+    // =====================================================
+    // SAVE DATA
+    // =====================================================
+
+    $(document).on(
+        "click",
+        "#kr-save",
+
+        function () {
+
+            const key =
+                getCharacterKey();
+
+            localStorage.setItem(
+
+                "kr_" + key,
+
+                $("#kr-textarea").val()
+            );
+
+            toastr.success(
+                "Saved"
+            );
+        }
+    );
+
+    // =====================================================
+    // FLOATING BUTTON
+    // =====================================================
+
+    function createFloatingButton() {
+
+        if ($("#kr-floating").length)
+            return;
+
+        $("body").append(`
+
+            <div id="kr-floating">
+                🍑
+            </div>
+
+        `);
+
+        const btn =
+            document.getElementById(
+                "kr-floating"
+            );
+
+        // =========================================
+        // SAVED POSITION
+        // =========================================
+
+        const savedX =
+            localStorage.getItem(
+                "kr_btn_x"
+            );
+
+        const savedY =
+            localStorage.getItem(
+                "kr_btn_y"
+            );
+
+        btn.style.left =
+            savedX || "20px";
+
+        btn.style.top =
+            savedY || "220px";
+
+        // =========================================
+        // DRAG
+        // =========================================
+
+        let dragging = false;
+
+        let moved = false;
+
+        let offsetX = 0;
+        let offsetY = 0;
+
+        btn.addEventListener(
+            "touchstart",
+
+            e => {
+
+                dragging = true;
+
+                moved = false;
+
+                const touch =
+                    e.touches[0];
+
+                offsetX =
+                    touch.clientX -
+                    btn.offsetLeft;
+
+                offsetY =
+                    touch.clientY -
+                    btn.offsetTop;
+            },
+
+            { passive: true }
+        );
+
+        document.addEventListener(
+            "touchmove",
+
+            e => {
+
+                if (!dragging)
+                    return;
+
+                moved = true;
+
+                const touch =
+                    e.touches[0];
+
+                btn.style.left =
+                    touch.clientX -
+                    offsetX + "px";
+
+                btn.style.top =
+                    touch.clientY -
+                    offsetY + "px";
+            },
+
+            { passive: true }
+        );
+
+        document.addEventListener(
+            "touchend",
+
+            () => {
+
+                if (!dragging)
+                    return;
+
+                dragging = false;
+
+                localStorage.setItem(
+                    "kr_btn_x",
+                    btn.style.left
+                );
+
+                localStorage.setItem(
+                    "kr_btn_y",
+                    btn.style.top
+                );
+
+                // TAP
+
+                if (!moved) {
+
+                    openModal();
+                }
+            }
+        );
+    }
+
+    function removeFloatingButton() {
+
+        $("#kr-floating")
+            .remove();
+    }
+
+    function updateFloatingButton() {
+
+        if (settings.floatingButton) {
+
+            createFloatingButton();
+
+        } else {
+
+            removeFloatingButton();
+        }
+    }
+
+    updateFloatingButton();
+
+    // =====================================================
+    // OPEN FROM EXTENSIONS
+    // =====================================================
+
+    $(document).on(
+        "click",
+        "#kr-open-panel",
+
+        function () {
+
+            openModal();
+        }
+    );
+
+});

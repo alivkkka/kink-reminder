@@ -1,59 +1,79 @@
-import { getContext } from "../../../extensions.js";
+import {
+    getContext
+} from "../../../extensions.js";
 
 jQuery(async () => {
 
-    // =====================================================
+    // ==================================================
     // SETTINGS
-    // =====================================================
+    // ==================================================
 
     const DEFAULT_SETTINGS = {
-        floatingButton: true
+
+        floatingButton: true,
+        autoScan: true
+
     };
 
     let settings =
         JSON.parse(
-            localStorage.getItem("kr_settings")
+            localStorage.getItem(
+                "kink_reminder_settings"
+            )
         ) || DEFAULT_SETTINGS;
 
     function saveSettings() {
 
         localStorage.setItem(
-            "kr_settings",
+            "kink_reminder_settings",
             JSON.stringify(settings)
         );
     }
 
-    // =====================================================
-    // EXTENSION PANEL
-    // =====================================================
+    // ==================================================
+    // EXTENSIONS PANEL
+    // ==================================================
 
     const settingsHtml = `
 
-    <div class="extension_block">
+    <div id="kink-reminder-settings"
+         class="extension_block">
 
         <div class="inline-drawer">
 
             <div class="inline-drawer-toggle inline-drawer-header">
-                🍑 Kink Reminder
+
+                🌶️ Kink Reminder
+
             </div>
 
             <div class="inline-drawer-content">
 
-                <label class="checkbox_label">
+                <label class="kink-setting-row">
 
                     <input
                         type="checkbox"
-                        id="kr-toggle-floating">
+                        id="kr-floating-toggle">
 
-                    Floating button
+                    Floating 🍑 кнопка
+
+                </label>
+
+                <label class="kink-setting-row">
+
+                    <input
+                        type="checkbox"
+                        id="kr-autoscan-toggle">
+
+                    Авто-скан карты
 
                 </label>
 
                 <button
-                    id="kr-open-panel"
+                    id="kr-open-window"
                     class="menu_button">
 
-                    🍑 Open Window
+                    🍑 Открыть окно
 
                 </button>
 
@@ -68,23 +88,29 @@ jQuery(async () => {
     $("#extensions_settings")
         .append(settingsHtml);
 
-    // =====================================================
-    // LOAD SETTINGS
-    // =====================================================
+    // ==================================================
+    // LOAD SETTINGS UI
+    // ==================================================
 
-    $("#kr-toggle-floating")
+    $("#kr-floating-toggle")
         .prop(
             "checked",
             settings.floatingButton
         );
 
-    // =====================================================
+    $("#kr-autoscan-toggle")
+        .prop(
+            "checked",
+            settings.autoScan
+        );
+
+    // ==================================================
     // SETTINGS EVENTS
-    // =====================================================
+    // ==================================================
 
     $(document).on(
         "change",
-        "#kr-toggle-floating",
+        "#kr-floating-toggle",
 
         function () {
 
@@ -97,9 +123,22 @@ jQuery(async () => {
         }
     );
 
-    // =====================================================
+    $(document).on(
+        "change",
+        "#kr-autoscan-toggle",
+
+        function () {
+
+            settings.autoScan =
+                this.checked;
+
+            saveSettings();
+        }
+    );
+
+    // ==================================================
     // CHARACTER
-    // =====================================================
+    // ==================================================
 
     function getCharacter() {
 
@@ -121,41 +160,63 @@ jQuery(async () => {
         );
     }
 
-    // =====================================================
+    // ==================================================
     // MODAL
-    // =====================================================
+    // ==================================================
 
     function createModal() {
 
-        if ($("#kr-modal").length)
+        if ($("#kink-reminder-modal").length)
             return;
 
         $("body").append(`
 
-        <div id="kr-modal">
+        <div id="kink-reminder-modal">
 
-            <div id="kr-modal-box">
+            <div class="kink-modal-box">
 
-                <div id="kr-header">
+                <div class="kink-modal-header">
 
-                    <span id="kr-title">
-                        🍑 Kink Reminder
-                    </span>
+                    <h3>
 
-                    <span id="kr-close">
+                        🍑
+
+                        <span id="kr-character-name">
+
+                            Character
+
+                        </span>
+
+                    </h3>
+
+                    <span id="close-kink-modal">
+
                         ×
+
                     </span>
 
                 </div>
 
+                <p class="kink-modal-desc">
+
+                    Кинки текущего персонажа
+
+                </p>
+
+                <button id="scan-kinks-btn">
+
+                    🔍 Сканировать карту
+
+                </button>
+
                 <textarea
-                    id="kr-textarea"
-                    placeholder="Character kinks..."
+                    id="kink-modal-text"
+                    placeholder="Кинки персонажа..."
                 ></textarea>
 
-                <button id="kr-save">
+                <button id="save-kink-modal">
 
-                    💾 Save
+                    💾 Сохранить
 
                 </button>
 
@@ -168,91 +229,62 @@ jQuery(async () => {
 
     createModal();
 
-    // =====================================================
+    // ==================================================
     // OPEN MODAL
-    // =====================================================
+    // ==================================================
 
     function openModal() {
 
+        const character =
+            getCharacter();
+
+        if (!character) {
+
+            toastr.error(
+                "Персонаж не найден"
+            );
+
+            return;
+        }
+
+        $("#kr-character-name")
+            .text(character.name);
+
         loadCharacterData();
 
-        $("#kr-modal")
+        $("#kink-reminder-modal")
             .css("display", "flex")
             .hide()
             .fadeIn(120);
     }
 
-    // =====================================================
-    // CLOSE
-    // =====================================================
+    // ==================================================
+    // CLOSE MODAL
+    // ==================================================
 
     $(document).on(
         "click",
-        "#kr-close",
+        "#close-kink-modal",
 
         function () {
 
-            $("#kr-modal")
+            $("#kink-reminder-modal")
                 .fadeOut(120);
         }
     );
 
-    // =====================================================
-    // LOAD DATA
-    // =====================================================
-
-    function loadCharacterData() {
-
-        const key =
-            getCharacterKey();
-
-        const saved =
-            localStorage.getItem(
-                "kr_" + key
-            ) || "";
-
-        $("#kr-textarea")
-            .val(saved);
-    }
-
-    // =====================================================
-    // SAVE DATA
-    // =====================================================
-
-    $(document).on(
-        "click",
-        "#kr-save",
-
-        function () {
-
-            const key =
-                getCharacterKey();
-
-            localStorage.setItem(
-
-                "kr_" + key,
-
-                $("#kr-textarea").val()
-            );
-
-            toastr.success(
-                "Saved"
-            );
-        }
-    );
-
-    // =====================================================
+    // ==================================================
     // FLOATING BUTTON
-    // =====================================================
+    // ==================================================
 
     function createFloatingButton() {
 
-        if ($("#kr-floating").length)
+        if ($("#kink-floating-btn").length)
             return;
 
         $("body").append(`
 
-            <div id="kr-floating">
+            <div id="kink-floating-btn">
                 🍑
             </div>
 
@@ -260,12 +292,12 @@ jQuery(async () => {
 
         const btn =
             document.getElementById(
-                "kr-floating"
+                "kink-floating-btn"
             );
 
-        // =========================================
+        // ======================================
         // SAVED POSITION
-        // =========================================
+        // ======================================
 
         const savedX =
             localStorage.getItem(
@@ -277,17 +309,25 @@ jQuery(async () => {
                 "kr_btn_y"
             );
 
-        btn.style.left =
-            savedX || "20px";
+        if (savedX && savedY) {
 
-        btn.style.top =
-            savedY || "220px";
+            btn.style.left =
+                savedX + "px";
 
-        // =========================================
-        // DRAG
-        // =========================================
+            btn.style.top =
+                savedY + "px";
 
-        let dragging = false;
+        } else {
+
+            btn.style.left = "18px";
+            btn.style.top = "220px";
+        }
+
+        // ======================================
+        // DRAG SYSTEM
+        // ======================================
+
+        let isDragging = false;
 
         let moved = false;
 
@@ -299,9 +339,9 @@ jQuery(async () => {
 
             e => {
 
-                dragging = true;
-
                 moved = false;
+
+                isDragging = true;
 
                 const touch =
                     e.touches[0];
@@ -313,9 +353,7 @@ jQuery(async () => {
                 offsetY =
                     touch.clientY -
                     btn.offsetTop;
-            },
-
-            { passive: true }
+            }
         );
 
         document.addEventListener(
@@ -323,7 +361,7 @@ jQuery(async () => {
 
             e => {
 
-                if (!dragging)
+                if (!isDragging)
                     return;
 
                 moved = true;
@@ -331,16 +369,20 @@ jQuery(async () => {
                 const touch =
                     e.touches[0];
 
-                btn.style.left =
+                const x =
                     touch.clientX -
-                    offsetX + "px";
+                    offsetX;
+
+                const y =
+                    touch.clientY -
+                    offsetY;
+
+                btn.style.left =
+                    x + "px";
 
                 btn.style.top =
-                    touch.clientY -
-                    offsetY + "px";
-            },
-
-            { passive: true }
+                    y + "px";
+            }
         );
 
         document.addEventListener(
@@ -348,22 +390,30 @@ jQuery(async () => {
 
             () => {
 
-                if (!dragging)
+                if (!isDragging)
                     return;
 
-                dragging = false;
+                isDragging = false;
 
                 localStorage.setItem(
                     "kr_btn_x",
-                    btn.style.left
+
+                    parseInt(
+                        btn.style.left
+                    )
                 );
 
                 localStorage.setItem(
                     "kr_btn_y",
-                    btn.style.top
+
+                    parseInt(
+                        btn.style.top
+                    )
                 );
 
-                // TAP
+                // ==================================
+                // OPEN MODAL IF NOT DRAGGED
+                // ==================================
 
                 if (!moved) {
 
@@ -375,7 +425,7 @@ jQuery(async () => {
 
     function removeFloatingButton() {
 
-        $("#kr-floating")
+        $("#kink-floating-btn")
             .remove();
     }
 
@@ -393,17 +443,212 @@ jQuery(async () => {
 
     updateFloatingButton();
 
-    // =====================================================
+    // ==================================================
     // OPEN FROM EXTENSIONS
-    // =====================================================
+    // ==================================================
 
     $(document).on(
         "click",
-        "#kr-open-panel",
+        "#kr-open-window",
 
         function () {
 
             openModal();
+        }
+    );
+
+    // ==================================================
+    // LOAD DATA
+    // ==================================================
+
+    function loadCharacterData() {
+
+        const key =
+            getCharacterKey();
+
+        const saved =
+            localStorage.getItem(
+                "kink_" + key
+            ) || "";
+
+        $("#kink-modal-text")
+            .val(saved);
+    }
+
+    // ==================================================
+    // SAVE DATA
+    // ==================================================
+
+    $(document).on(
+        "click",
+        "#save-kink-modal",
+
+        function () {
+
+            const key =
+                getCharacterKey();
+
+            localStorage.setItem(
+
+                "kink_" + key,
+
+                $("#kink-modal-text")
+                    .val()
+            );
+
+            $(this)
+                .text("✓ Сохранено");
+
+            setTimeout(() => {
+
+                $("#save-kink-modal")
+                    .text(
+                        "💾 Сохранить"
+                    );
+
+            }, 1200);
+        }
+    );
+
+    // ==================================================
+    // KINK EXTRACTION
+    // ==================================================
+
+    function extractKinks(text) {
+
+        const keywords = [
+
+            "spitting",
+            "deep throat",
+            "deepthroat",
+            "anal",
+            "rough sex",
+            "choking",
+            "biting",
+            "degradation",
+            "orgasm control",
+            "fingering",
+            "shower sex",
+            "semi-public",
+            "facial",
+            "facesitting",
+            "dirty talk",
+            "spanking",
+            "bondage",
+
+            // RU
+
+            "сплёвывание",
+            "глубокий минет",
+            "анальный",
+            "удушение",
+            "укусы",
+            "деградация",
+            "контроль оргазма",
+            "фистинг",
+            "секс в душе",
+            "полупубличный",
+            "фейсситтинг",
+            "грязные разговорчики",
+            "жёсткий секс",
+            "шлепки",
+            "порка",
+            "унижение"
+
+        ];
+
+        const found = [];
+
+        const lower =
+            text.toLowerCase();
+
+        for (const kink of keywords) {
+
+            if (lower.includes(kink)) {
+
+                found.push(kink);
+            }
+        }
+
+        return [...new Set(found)];
+    }
+
+    // ==================================================
+    // CHARACTER TEXT
+    // ==================================================
+
+    function getCharacterText(character) {
+
+        return `
+
+            ${character.description || ""}
+            ${character.personality || ""}
+            ${character.scenario || ""}
+            ${character.first_mes || ""}
+            ${character.mes_example || ""}
+
+        `;
+    }
+
+    // ==================================================
+    // SCAN
+    // ==================================================
+
+    $(document).on(
+        "click",
+        "#scan-kinks-btn",
+
+        function () {
+
+            const character =
+                getCharacter();
+
+            if (!character) {
+
+                toastr.error(
+                    "Нет персонажа"
+                );
+
+                return;
+            }
+
+            const text =
+                getCharacterText(
+                    character
+                );
+
+            const kinks =
+                extractKinks(text);
+
+            if (!kinks.length) {
+
+                $("#kink-modal-text")
+                    .val(
+`Ничего не найдено автоматически.
+
+Добавь вручную.`
+                    );
+
+                toastr.warning(
+                    "Кинки не найдены"
+                );
+
+                return;
+            }
+
+            $("#kink-modal-text")
+                .val(
+
+                    kinks
+                        .map(
+                            x => `• ${x}`
+                        )
+                        .join("\n")
+                );
+
+            toastr.success(
+                `Найдено: ${kinks.length}`
+            );
         }
     );
 

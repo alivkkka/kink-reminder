@@ -1,9 +1,9 @@
 {
     "name": "🌶️ Kink Reminder",
     "id": "kink-reminder",
-    "version": "1.1.0",
-    "description": "Напоминалка фетишей и стоп-слов персонажа прямо в меню расширений",
-    "author": "AI Collaborator",
+    "version": "2.0.0",
+    "description": "AI-анализ предпочтений персонажа и умные reminders",
+    "author": "Alivka",
     "js": "index.js",
     "css": "style.css"
 }

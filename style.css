@@ -1,52 +1,23 @@
-#kink-medical-card {
+#kink-float-btn {
     position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 400px;
-    background: #fff0f5; /* Нежно-розовый */
-    border: 2px solid #ffb6c1;
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    z-index: 9999;
-    font-family: 'Courier New', Courier, monospace;
-    color: #333;
-}
-#kink-medical-card h2 {
-    text-align: center;
-    color: #d6336c;
-    border-bottom: 2px dashed #ffb6c1;
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-.kink-list {
-    max-height: 200px;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #ffb6c1;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-.kink-item {
-    padding: 5px;
-    border-bottom: 1px solid #ffe4e1;
-}
-.kink-buttons {
-    display: flex;
-    justify-content: space-between;
-}
-.kink-buttons button {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
     background: #ff69b4;
     color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
     cursor: pointer;
-    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 9998;
     transition: 0.3s;
+    border: 2px solid #fff;
 }
-.kink-buttons button:hover {
+#kink-float-btn:hover {
+    transform: scale(1.1);
     background: #d6336c;
 }

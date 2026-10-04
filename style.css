@@ -1,262 +1,52 @@
-/* ==================================================
-   ГЛАВНЫЙ ПЛАВАЮЩИЙ ПЕРСИК 🍑
-   ================================================== */
-#kink-floating-btn {
+#kink-medical-card {
     position: fixed;
-    width: 54px;
-    height: 54px;
-    background: linear-gradient(135deg, #ff4565, #ff6b8b);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8em;
-    cursor: pointer;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    background: #fff0f5; /* Нежно-розовый */
+    border: 2px solid #ffb6c1;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     z-index: 9999;
-    box-shadow: 0 0 15px rgba(255, 69, 101, 0.4);
-    user-select: none;
-    touch-action: none;
+    font-family: 'Courier New', Courier, monospace;
+    color: #333;
 }
-
-/* ==================================================
-   МОДАЛЬНОЕ ОКНО (В СТИЛЕ VNE BROOKS)
-   ================================================== */
-#kink-reminder-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(10, 11, 18, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 99999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    padding: 12px;
-    box-sizing: border-box;
+#kink-medical-card h2 {
+    text-align: center;
+    color: #d6336c;
+    border-bottom: 2px dashed #ffb6c1;
+    padding-bottom: 10px;
+    margin-top: 0;
 }
-
-/* Контейнер карточки */
-.kink-modal-box {
-    background: #16192b; /* Глубокий сине-черный оттенок как в VNE */
-    border: 1px solid rgba(255, 69, 101, 0.25);
-    border-radius: 20px;
-    width: 100%;
-    max-width: 410px;
-    max-height: 92vh;
-    padding: 18px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-    box-sizing: border-box;
+.kink-list {
+    max-height: 200px;
     overflow-y: auto;
-    position: relative;
-    color: #e2e4f0;
+    background: #fff;
+    border: 1px solid #ffb6c1;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
-
-/* Шапка плагина */
-.kink-modal-header {
+.kink-item {
+    padding: 5px;
+    border-bottom: 1px solid #ffe4e1;
+}
+.kink-buttons {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 8px;
 }
-
-.kink-modal-header h2 {
-    margin: 0;
-    font-size: 1.1em;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #8b92b5;
-    font-weight: 700;
-}
-
-#close-kink-modal {
-    font-size: 26px;
-    color: #5c6285;
-    cursor: pointer;
-    line-height: 1;
-}
-
-/* ==================================================
-   БЛОК 1. СИСТЕМНЫЙ ЖУРНАЛ (ЯЧЕЙКИ)
-   ================================================== */
-.kink-vne-section-title {
-    font-size: 0.8em;
-    text-transform: uppercase;
-    color: #ff4565;
-    letter-spacing: 1px;
-    margin: 8px 0;
-    font-weight: bold;
-}
-
-.kink-system-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.kink-grid-cell {
-    background: #1c2038;
-    border: 1px solid #252a4a;
-    border-radius: 12px;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-.kink-cell-label {
-    font-size: 0.75em;
-    color: #6c7399;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-}
-
-.kink-cell-value {
-    font-size: 0.95em;
-    font-weight: bold;
-    color: #ffffff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ==================================================
-   БЛОК 2. КАРТОЧКА БОТА И РУЛЕТКА
-   ================================================== */
-.kink-bot-card {
-    background: #1c2038;
-    border: 1px solid rgba(255, 69, 101, 0.2);
-    border-radius: 16px;
-    padding: 14px;
-    margin-bottom: 16px;
-}
-
-.kink-bot-identity {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 12px;
-}
-
-.kink-bot-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 2px solid #ff4565;
-    object-fit: cover;
-    background: #111422;
-}
-
-.kink-bot-meta {
-    flex-grow: 1;
-}
-
-.kink-bot-name {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #ffffff;
-    margin-bottom: 2px;
-}
-
-/* Ползунок Похоти */
-.kink-lust-container {
-    margin-top: 6px;
-}
-.kink-lust-slider {
-    width: 100%;
-    accent-color: #ff4565;
-    margin: 4px 0;
-    cursor: pointer;
-}
-
-/* Блок Ситуационной Рулетки */
-.kink-roulette-box {
-    background: #111422;
-    border: 1px solid #2b3154;
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-    margin-top: 10px;
-}
-
-#kr-roulette-result {
-    font-size: 0.95em;
-    color: #ff6b8b;
-    font-weight: bold;
-    min-height: 22px;
-    text-shadow: 0 0 8px rgba(255, 69, 101, 0.3);
-}
-
-.kink-roulette-btn {
-    width: 100%;
-    background: linear-gradient(90deg, #ff4565, #ff6b8b);
+.kink-buttons button {
+    background: #ff69b4;
     color: white;
     border: none;
-    padding: 8px;
+    padding: 10px 15px;
     border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-top: 8px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(255, 69, 101, 0.2);
-}
-
-/* ==================================================
-   БЛОК 3. МЕДИЦИНСКАЯ КАРТА (СКАНЕР И СПИСОК)
-   ================================================== */
-#scan-kinks-btn {
-    width: 100%;
-    background: rgba(255, 69, 101, 0.1);
-    color: #ff4565;
-    border: 1px solid rgba(255, 69, 101, 0.4);
-    padding: 10px;
-    border-radius: 10px;
     font-weight: bold;
-    font-size: 0.9em;
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: background 0.2s;
+    transition: 0.3s;
 }
-#scan-kinks-btn:active { background: rgba(255, 69, 101, 0.25); }
-
-#kink-modal-text {
-    width: 100%;
-    height: 120px;
-    background: #111422;
-    color: #f3f3f9;
-    border: 1px solid #252a4a;
-    border-radius: 10px;
-    padding: 10px;
-    font-size: 0.9em;
-    line-height: 1.4;
-    resize: none;
-    box-sizing: border-box;
-    outline: none;
-    margin-bottom: 12px;
-}
-#kink-modal-text:focus { border-color: rgba(255, 69, 101, 0.5); }
-
-#save-kink-modal {
-    width: 100%;
-    background: #1c2038;
-    color: #ff4565;
-    border: 1px solid rgba(255, 69, 101, 0.4);
-    padding: 10px;
-    border-radius: 10px;
-    font-weight: bold;
-    font-size: 0.95em;
-    cursor: pointer;
-}
-
-/* Для боковой панели настроек в Кубиках */
-.kink-setting-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    color: #ccd0e6;
+.kink-buttons button:hover {
+    background: #d6336c;
 }

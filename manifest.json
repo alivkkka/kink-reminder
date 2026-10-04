@@ -1,9 +1,12 @@
 {
-    "name": "🔞 Kink Reminder",
-    "type": "extension",
-    "main": "index.js",
-    "version": "1.3.0",
-    "description": "Продвинутая напоминалка кинков со сканером карты и авто-похотью",
-    "author": "AI & Clever User",
-    "css": ["style.css"]
+    "display_name": "Kink Medical Card",
+    "loading_order": 1,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Ты",
+    "version": "1.0.0",
+    "homePage": "https://github.com/alivkkka/kink-reminder",
+    "type": "extension"
 }

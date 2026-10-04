@@ -1,129 +1,506 @@
-import { getContext, eventSource, event_types } from "../../../extensions.js";
-
-const extensionName = "kink-reminder";
+const MODULE_NAME = 'kink-reminder';
 
 let currentKinks = [];
+let initialized = false;
 
-// 1. Функция для вытаскивания кинков из карточки
-function extractKinks(character) {
-    let text = "";
-    if (character.description) text += character.description + "\n";
-    if (character.personality) text += character.personality + "\n";
-    if (character.scenario) text += character.scenario + "\n";
-    if (character.first_mes) text += character.first_mes + "\n";
-
-    const kinkKeywords = /(?:kinks?|fetishes?|turn-ons?|предпочтения|фетиши|кинки|извращения)/i;
-    const lines = text.split('\n');
-    let kinkSection = [];
-    let inKinkSection = false;
-
-    for (let line of lines) {
-        if (kinkKeywords.test(line)) {
-            inKinkSection = true;
-            let cleanedLine = line.replace(/.*?:/, '').trim();
-            if (cleanedLine) kinkSection.push(cleanedLine);
-            continue;
-        }
-        if (inKinkSection) {
-            if (line.match(/^[A-ZА-Я][a-zа-я]+:/) && kinkSection.length > 0) {
-                inKinkSection = false;
-            } else if (line.trim() !== "") {
-                kinkSection.push(line.trim());
-            }
-        }
+/**
+ * Получаем контекст SillyTavern современным способом.
+ */
+function getSTContext() {
+    if (typeof SillyTavern === 'undefined' || typeof SillyTavern.getContext !== 'function') {
+        console.error('[Love Clinic] SillyTavern.getContext() недоступен.');
+        return null;
     }
 
-    let rawKinks = kinkSection.join(', ');
-    let kinksArray = rawKinks.split(/[,;\n]/).map(k => k.trim()).filter(k => k.length > 2);
-    
-    if (kinksArray.length === 0) {
-        kinksArray = ["Стандартные предпочтения (не найдены в карте)"];
-    }
-    return kinksArray;
+    return SillyTavern.getContext();
 }
 
-// 2. Создание окна "Медкарточки"
-function createMedicalCard() {
-    if (document.getElementById('kink-medical-card')) return;
+/**
+ * Экранирование HTML.
+ */
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-    const cardHtml = `
-        <div id="kink-medical-card">
-            <h2>🩺 Медицинская карта кинков</h2>
-            <div class="kink-list" id="kink-list-container"></div>
-            <div class="kink-buttons">
-                <button id="roll-kink-btn">🎲 Бросить кубик</button>
-                <button id="close-card-btn" style="background: #999;">Закрыть</button>
+/**
+ * Получаем текст карточки персонажа.
+ */
+function getCharacterText(character) {
+    if (!character) {
+        return '';
+    }
+
+    const parts = [
+        character.description,
+        character.personality,
+        character.scenario,
+        character.first_mes
+    ];
+
+    // На случай современных/импортированных карточек
+    if (character.data) {
+        parts.push(
+            character.data.description,
+            character.data.personality,
+            character.data.scenario,
+            character.data.first_mes
+        );
+    }
+
+    return parts
+        .filter(value => typeof value === 'string' && value.trim())
+        .join('\n');
+}
+
+/**
+ * Вытаскиваем кинк-секцию из карточки.
+ */
+function extractKinks(character) {
+    const text = getCharacterText(character);
+
+    if (!text.trim()) {
+        return ['Стандартные предпочтения (карта персонажа пуста)'];
+    }
+
+    const lines = text
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map(line => line.trim());
+
+    const headingRegex =
+        /^(?:kinks?|kink\s*list|fetishes?|fetish\s*list|turn[-\s]?ons?|preferences?|likes?|извращения|кинки|фетиши|предпочтения|возбуждает|нравится)\s*:?\s*(.*)$/i;
+
+    const nextSectionRegex =
+        /^(?:body|appearance|personality|behavior|behaviour|scenario|background|history|description|appearance|характер|внешность|поведение|сценарий|биография|описание|личность)\s*:?\s*$/i;
+
+    const collected = [];
+    let collecting = false;
+
+    for (const line of lines) {
+        if (!line) {
+            if (collecting && collected.length > 0) {
+                // Пустая строка может означать конец секции.
+                collecting = false;
+            }
+            continue;
+        }
+
+        const headingMatch = line.match(headingRegex);
+
+        if (headingMatch) {
+            collecting = true;
+
+            const inlineValue = headingMatch[1]?.trim();
+
+            if (inlineValue) {
+                collected.push(inlineValue);
+            }
+
+            continue;
+        }
+
+        if (collecting && nextSectionRegex.test(line)) {
+            collecting = false;
+            continue;
+        }
+
+        if (collecting) {
+            collected.push(line);
+        }
+    }
+
+    /*
+     * Если секция не нашлась, попробуем найти строки,
+     * содержащие очевидные обозначения кинков.
+     */
+    if (collected.length === 0) {
+        const fallback = [];
+
+        for (const line of lines) {
+            if (
+                /(?:kink|fetish|turn[-\s]?on|кинк|фетиш|предпочтени|извращени)/i.test(line)
+            ) {
+                const cleaned = line
+                    .replace(/^[^:]{0,40}:\s*/i, '')
+                    .trim();
+
+                if (cleaned && cleaned.length > 2) {
+                    fallback.push(cleaned);
+                }
+            }
+        }
+
+        collected.push(...fallback);
+    }
+
+    /*
+     * Разбиваем списки вида:
+     * Kinks: biting, teasing, praise
+     * или
+     * - biting
+     * - teasing
+     */
+    const result = [];
+
+    for (const item of collected) {
+        const pieces = item
+            .replace(/^[-*•]\s*/, '')
+            .split(/[,;|]/)
+            .map(value => value.trim())
+            .filter(value => value.length > 2);
+
+        result.push(...pieces);
+    }
+
+    // Убираем дубликаты
+    const unique = [...new Set(result)];
+
+    if (unique.length === 0) {
+        return ['Стандартные предпочтения (кинки не найдены в карте)'];
+    }
+
+    return unique;
+}
+
+/**
+ * Находим контейнер настроек расширений.
+ */
+function getExtensionSettingsContainer() {
+    const modern = document.querySelector('#extensions_settings2');
+    const legacy = document.querySelector('#extensions_settings');
+
+    return modern || legacy || null;
+}
+
+/**
+ * Создаём кнопку Love Clinic в панели расширений.
+ */
+function createSettingsPanel() {
+    if (document.getElementById('love-clinic-settings')) {
+        return;
+    }
+
+    const container = getExtensionSettingsContainer();
+
+    if (!container) {
+        console.warn('[Love Clinic] Контейнер настроек расширений пока не найден.');
+        return false;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'love-clinic-settings';
+    wrapper.className = 'kink-reminder-settings';
+
+    wrapper.innerHTML = `
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>💖 Love Clinic</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+            </div>
+
+            <div class="inline-drawer-content">
+                <p>
+                    Медкарта кинков персонажа и случайный выбор предпочтения.
+                </p>
+
+                <button
+                    id="love-clinic-open-btn"
+                    class="menu_button"
+                    type="button">
+                    🩺 Открыть медкарту
+                </button>
             </div>
         </div>
     `;
-    
-    $('body').append(cardHtml);
-    updateKinkListUI();
 
-    $('#close-card-btn').on('click', () => {
-        $('#kink-medical-card').remove();
+    container.appendChild(wrapper);
+
+    wrapper.querySelector('#love-clinic-open-btn')
+        ?.addEventListener('click', openKinkReminder);
+
+    return true;
+}
+
+/**
+ * Создаём плавающую кнопку.
+ */
+function createFloatingButton() {
+    if (document.getElementById('love-clinic-float-btn')) {
+        return;
+    }
+
+    const button = document.createElement('button');
+
+    button.id = 'love-clinic-float-btn';
+    button.type = 'button';
+    button.title = 'Love Clinic';
+    button.textContent = '🩺';
+
+    button.addEventListener('click', openKinkReminder);
+
+    document.body.appendChild(button);
+}
+
+/**
+ * Создаём окно медкарты.
+ */
+function createMedicalCard() {
+    let card = document.getElementById('love-clinic-card');
+
+    if (!card) {
+        card = document.createElement('div');
+        card.id = 'love-clinic-card';
+
+        card.innerHTML = `
+            <div class="love-clinic-backdrop"></div>
+
+            <div class="love-clinic-window">
+                <div class="love-clinic-header">
+                    <h2>🩺 Медицинская карта кинков</h2>
+
+                    <button
+                        id="love-clinic-close"
+                        type="button"
+                        class="love-clinic-close">
+                        ×
+                    </button>
+                </div>
+
+                <div
+                    id="love-clinic-list"
+                    class="love-clinic-list">
+                </div>
+
+                <div class="love-clinic-actions">
+                    <button
+                        id="love-clinic-roll"
+                        type="button"
+                        class="menu_button">
+                        🎲 Бросить кубик
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(card);
+
+        card.querySelector('.love-clinic-backdrop')
+            ?.addEventListener('click', closeMedicalCard);
+
+        card.querySelector('#love-clinic-close')
+            ?.addEventListener('click', closeMedicalCard);
+
+        card.querySelector('#love-clinic-roll')
+            ?.addEventListener('click', rollKink);
+    }
+
+    updateKinkList();
+
+    card.classList.add('open');
+}
+
+/**
+ * Закрываем медкарту.
+ */
+function closeMedicalCard() {
+    const card = document.getElementById('love-clinic-card');
+
+    if (card) {
+        card.classList.remove('open');
+    }
+}
+
+/**
+ * Обновляем список кинков.
+ */
+function updateKinkList() {
+    const container = document.getElementById('love-clinic-list');
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+
+    currentKinks.forEach((kink, index) => {
+        const item = document.createElement('div');
+
+        item.className = 'love-clinic-kink';
+        item.dataset.index = String(index);
+
+        item.textContent = `💊 ${kink}`;
+
+        container.appendChild(item);
     });
+}
 
-    $('#roll-kink-btn').on('click', () => {
-        if (currentKinks.length > 0) {
-            const randomKink = currentKinks[Math.floor(Math.random() * currentKinks.length)];
-            const context = getContext();
-            context.sendMessage(`🎲 **Рулетка кинков:** Выпало: *${randomKink}*`);
-            $('.kink-item').css('background', 'transparent');
-            $(`.kink-item:contains('${randomKink}')`).css('background', '#ffeb3b');
+/**
+ * Выбираем случайный кинк.
+ */
+async function rollKink() {
+    if (!currentKinks.length) {
+        return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * currentKinks.length);
+    const randomKink = currentKinks[randomIndex];
+
+    document.querySelectorAll('.love-clinic-kink')
+        .forEach(element => element.classList.remove('selected'));
+
+    const selected = document.querySelector(
+        `.love-clinic-kink[data-index="${randomIndex}"]`
+    );
+
+    selected?.classList.add('selected');
+
+    await sendKinkToChat(randomKink);
+}
+
+/**
+ * Отправляем результат в чат.
+ */
+async function sendKinkToChat(kink) {
+    const context = getSTContext();
+
+    if (!context) {
+        return;
+    }
+
+    const messageText =
+        `🎲 **Love Clinic:** выпало предпочтение — *${kink}*`;
+
+    /*
+     * В разных версиях ST способ добавления сообщения немного отличается.
+     * Сначала используем официальный context.addOneMessage().
+     */
+    if (typeof context.addOneMessage === 'function') {
+        const message = {
+            name: context.name2 || 'Love Clinic',
+            is_user: false,
+            is_system: true,
+            mes: messageText,
+            send_date: Date.now(),
+            extra: {}
+        };
+
+        await context.addOneMessage(message);
+
+        if (typeof context.saveChat === 'function') {
+            await context.saveChat();
         }
-    });
-}
 
-function updateKinkListUI() {
-    const container = $('#kink-list-container');
-    container.empty();
-    if (currentKinks.length === 0) {
-        container.append('<div class="kink-item">Кинки не найдены. Проверьте карту персонажа.</div>');
         return;
     }
-    currentKinks.forEach(kink => {
-        container.append(`<div class="kink-item">💊 ${kink}</div>`);
-    });
+
+    /*
+     * Запасной вариант.
+     */
+    if (Array.isArray(context.chat)) {
+        const message = {
+            name: context.name2 || 'Love Clinic',
+            is_user: false,
+            is_system: true,
+            mes: messageText,
+            send_date: Date.now(),
+            extra: {}
+        };
+
+        context.chat.push(message);
+
+        if (typeof context.saveChat === 'function') {
+            await context.saveChat();
+        }
+    }
 }
 
-// 3. Открытие медкарты
-async function openKinkReminder() {
-    const context = getContext();
-    const character = context.characters[context.characterId];
-    
+/**
+ * Открываем Love Clinic.
+ */
+function openKinkReminder() {
+    const context = getSTContext();
+
+    if (!context) {
+        return;
+    }
+
+    const character =
+        context.characters?.[context.characterId];
+
     if (!character) {
-        if (typeof toastr !== 'undefined') toastr.warning("Сначала выберите персонажа в чате!");
+        if (typeof toastr !== 'undefined') {
+            toastr.warning(
+                'Сначала выбери персонажа в чате.',
+                'Love Clinic'
+            );
+        }
+
         return;
     }
+
     currentKinks = extractKinks(character);
+
     createMedicalCard();
 }
 
-// 4. Добавляем ПЛАВАЮЩУЮ КНОПКУ при загрузке
-jQuery(async () => {
-    // Плавающая кнопка в углу
-    const floatBtnHtml = `<div id="kink-float-btn" title="Love Clinic">🩺</div>`;
-    $('body').append(floatBtnHtml);
-    $('#kink-float-btn').on('click', openKinkReminder);
+/**
+ * Инициализация расширения.
+ */
+function init() {
+    if (initialized) {
+        return;
+    }
 
-    // Кнопка в меню расширений (сработает, когда Таверна загрузит интерфейс)
-    eventSource.on(event_types.APP_READY, () => {
-        const settingsHtml = `
-        <div class="kink-reminder-settings">
-            <div class="inline-drawer">
-                <div class="inline-drawer-toggle inline-drawer-header">
-                    <b>Love Clinic (Kink Reminder)</b>
-                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
-                </div>
-                <div class="inline-drawer-content">
-                    <p>Вытаскивает фетиши из карты персонажа и позволяет выбрать случайный.</p>
-                    <button id="open-kink-card-btn" class="menu_button">Открыть Медкарту</button>
-                </div>
-            </div>
-        </div>`;
-        
-        $('#extensions_settings').append(settingsHtml);
-        $('#open-kink-card-btn').on('click', openKinkReminder);
-    });
-});
+    initialized = true;
+
+    console.log('[Love Clinic] Инициализация...');
+
+    createFloatingButton();
+
+    /*
+     * Контейнер расширений может появиться немного позже.
+     * Поэтому пробуем несколько раз, но только до появления панели.
+     */
+    let attempts = 0;
+
+    const settingsTimer = setInterval(() => {
+        attempts++;
+
+        if (createSettingsPanel()) {
+            clearInterval(settingsTimer);
+            return;
+        }
+
+        if (attempts >= 30) {
+            clearInterval(settingsTimer);
+
+            console.warn(
+                '[Love Clinic] Не удалось найти панель настроек расширений.'
+            );
+        }
+    }, 300);
+
+    console.log('[Love Clinic] Готово.');
+}
+
+/*
+ * Для ST с hooks.activate.
+ */
+export function onActivate() {
+    init();
+}
+
+/*
+ * Дополнительная страховка:
+ * если ST запустит файл без lifecycle hook.
+ */
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+    init();
+}
